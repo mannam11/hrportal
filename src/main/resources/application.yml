@@ -1,0 +1,32 @@
+spring:
+  application:
+    name: hrportal
+  cloud:
+    aws:
+      region:
+        static: ap-south-1
+  data:
+    mongodb:
+      uri: ${MONGO_DB_URI}
+  ai:
+    openai:
+      base-url: "https://api.openai.com/"
+      api-key: ${OPENAI_API_KEY}
+      chat:
+        options:
+          model: "gpt-4o"
+          n: 1
+          temperature: 0
+
+aws:
+  sqs:
+    jobQueueUrl: ${JOB_QUEUE_URL}
+    jobQueueName: ${JOB_QUEUE_NAME}
+
+app:
+  aws:
+    s3:
+      bucket: ${S3.BUCKET}
+
+jwt:
+  secret: ${JWT_SECRET_KEY}
