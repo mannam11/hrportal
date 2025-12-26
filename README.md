@@ -151,3 +151,25 @@ The backend supports exporting application data as CSV files:
 This allows seamless integration with external reporting or HR tools.
 
 ---
+## 🔌 External Integrations
+
+This project integrates with several external services to support scalable, production-grade backend workflows. These integrations are intentionally designed to be asynchronous, secure, and loosely coupled.
+
+### AWS S3 – Resume Storage
+- Candidate resumes are uploaded and stored in **AWS S3**.
+- Only the generated S3 object key is persisted in the database.
+- This keeps the database lightweight and allows the system to scale independently for file storage.
+- Access to resumes is fully controlled by the backend.
+
+### AWS SQS – Asynchronous Processing
+- After a candidate applies for a job, an event is published to **AWS SQS**.
+- This enables non-blocking, asynchronous processing for downstream tasks.
+- The main application flow remains fast and resilient, even under high load.
+
+### OpenAI – Resume Analysis
+- Resume analysis is performed asynchronously using **OpenAI APIs**.
+- The analysis extracts structured insights from resumes, which are stored and used for:
+    - Automated shortlisting
+    - Application insights
+    - Dashboard metrics
+- AI processing is fully decoupled from the core request lifecycle.
