@@ -1,0 +1,36 @@
+spring:
+  application:
+    name: hrportal
+  data:
+    mongodb:
+      uri: ${MONGODB_URI}
+  ai:
+    openai:
+      api-key: ${OPENAI_API_KEY}
+      chat:
+        options:
+          model: "gpt-4o"
+          n: 1
+          temperature: 0
+  rabbitmq:
+    addresses: ${CLOUDAMQP_URL}
+    listener:
+      simple:
+        acknowledge-mode: auto
+
+resume:
+  analysis:
+    queue : ${RESUME_ANALYSIS_QUEUE}
+
+jwt:
+  secret: ${JWT_SECRET}
+
+supabase:
+  url: ${SUPABASE_URL}
+  service-key: ${SUPABASE_SERVICE_ROLE_KEY}
+  bucket: ${SUPABASE_STORAGE_BUCKET}
+
+logging:
+  level:
+    root: INFO
+    org.springframework.security: WARN
