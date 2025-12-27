@@ -38,14 +38,11 @@ public class AuthController {
 
         String refreshToken = refreshTokenService.create(authResponse.getUserId());
 
-        ResponseCookie refreshCookie = ResponseCookie.from(
-                        "refreshToken",
-                        refreshToken
-                )
+        ResponseCookie refreshCookie = ResponseCookie.from("refreshToken", refreshToken)
                 .httpOnly(true)
                 .secure(true)
-                .sameSite("Strict")
-                .path("/auth/refresh")
+                .sameSite("None")
+                .path("/")
                 .maxAge(Duration.ofDays(7))
                 .build();
 
@@ -91,9 +88,9 @@ public class AuthController {
         ResponseCookie cookie = ResponseCookie.from("refreshToken", "")
                 .httpOnly(true)
                 .secure(true)
-                .path("/auth/refresh")
+                .sameSite("None")
+                .path("/")
                 .maxAge(0)
-                .sameSite("Strict")
                 .build();
 
         response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
