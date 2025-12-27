@@ -33,7 +33,7 @@ public class OpenAIResumeAnalysisService implements ResumeAnalysisService{
             return null;
         }
 
-        log.info("AI analysis is getting started");
+        log.info("AI analysis is getting started for application with id : {}",application.getId());
 
         return chatClient.prompt()
                 .system(systemPrompt())
