@@ -155,16 +155,21 @@ This allows seamless integration with external reporting or HR tools.
 
 This project integrates with several external services to support scalable, production-grade backend workflows. These integrations are intentionally designed to be asynchronous, secure, and loosely coupled.
 
-### AWS S3 – Resume Storage
-- Candidate resumes are uploaded and stored in **AWS S3**.
-- Only the generated S3 object key is persisted in the database.
+### Supabase Storage – Resume Storage
+- Candidate resumes are uploaded and stored in **Supabase Storage**.
+- Only the generated storage object key is persisted in the database.
 - This keeps the database lightweight and allows the system to scale independently for file storage.
-- Access to resumes is fully controlled by the backend.
+- Resume access is fully controlled by the backend using Supabase service role credentials.
+- Supabase provides a reliable, cost-effective alternative to traditional object storage services.
 
-### AWS SQS – Asynchronous Processing
-- After a candidate applies for a job, an event is published to **AWS SQS**.
-- This enables non-blocking, asynchronous processing for downstream tasks.
-- The main application flow remains fast and resilient, even under high load.
+### RabbitMQ (CloudAMQP) – Asynchronous Processing
+- After a candidate applies for a job, an event is published to a **RabbitMQ queue** hosted on **CloudAMQP**.
+- This enables non-blocking, asynchronous processing for:
+    - Resume analysis
+    - Skill matching
+    - Scoring and shortlisting
+- The main application flow remains fast and responsive, even under high load.
+- CloudAMQP’s managed RabbitMQ offering provides a free tier suitable for development and early-stage deployments.
 
 ### OpenAI – Resume Analysis
 - Resume analysis is performed asynchronously using **OpenAI APIs**.
@@ -173,3 +178,9 @@ This project integrates with several external services to support scalable, prod
     - Application insights
     - Dashboard metrics
 - AI processing is fully decoupled from the core request lifecycle.
+
+### Why This Architecture?
+- ✅ Vendor-agnostic and cloud-portable
+- ✅ Lower operational cost compared to AWS VPC-based services
+- ✅ Clear separation between request handling and heavy background processing
+- ✅ Easy to swap implementations (queue or storage) via interfaces
