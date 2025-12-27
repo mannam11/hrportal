@@ -77,6 +77,11 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
 
         return AuthResponse.builder()
                 .accessToken(jwtService.generateAccessToken(user))
+                .userId(user.getId())
+                .fullName(user.getFullName())
+                .orgName(user.getOrgName())
+                .email(user.getEmail())
+                .lastUpdatedAt(user.getUpdatedAt())
                 .build();
     }
 
