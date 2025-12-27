@@ -18,7 +18,7 @@ import java.time.LocalDateTime;
 @Component
 @RequiredArgsConstructor
 @Slf4j
-public class RefreshTokenServiceImpl implements RefreshTokenService{
+public class RefreshTokenServiceImpl implements RefreshTokenService {
 
     private final RefreshTokenRepository refreshTokenRepository;
     private final PasswordEncoder passwordEncoder;
@@ -32,71 +32,71 @@ public class RefreshTokenServiceImpl implements RefreshTokenService{
 
         refreshTokenRepository
                 .findByUserIdAndRevokedFalseAndExpiresAtAfter(userId, now)
-                .ifPresent(token -> {
-                    token.setRevoked(true);
-                    refreshTokenRepository.save(token);
-                });
+                .ifPresent(this::revoke);
 
-        String rawToken = Generators.timeBasedEpochGenerator().generate().toString();
+        String tokenId = Generators.timeBasedEpochGenerator().generate().toString();
+        String secret = Generators.timeBasedEpochGenerator().generate().toString();
 
         RefreshToken refreshToken = RefreshToken.builder()
-                .id(Generators.timeBasedEpochGenerator().generate().toString())
-                .revoked(false)
-                .tokenHash(passwordEncoder.encode(rawToken))
+                .id(tokenId)
+                .tokenHash(passwordEncoder.encode(secret))
                 .userId(userId)
+                .revoked(false)
                 .createdAt(now)
                 .expiresAt(now.plusDays(7))
                 .build();
 
         refreshTokenRepository.save(refreshToken);
 
-        return rawToken;
+        return tokenId + "." + secret;
     }
 
     @Override
     public AuthResponse refresh(String rawRefreshToken) {
 
-        RefreshToken refreshToken = checkIfExists();
+        String[] parts = parse(rawRefreshToken);
+        String tokenId = parts[0];
+        String secret = parts[1];
 
-        if (!passwordEncoder.matches(rawRefreshToken, refreshToken.getTokenHash())) {
-            revoke(refreshToken);
-            throw new InvalidException("Please login again");
-        }
+        RefreshToken refreshToken = refreshTokenRepository
+                .findByIdAndRevokedFalse(tokenId)
+                .orElseThrow(() -> new InvalidException("Please login again"));
 
         if (LocalDateTime.now().isAfter(refreshToken.getExpiresAt())) {
             revoke(refreshToken);
             throw new InvalidException("Please login again");
         }
 
+        if (!passwordEncoder.matches(secret, refreshToken.getTokenHash())) {
+            revoke(refreshToken);
+            throw new InvalidException("Please login again");
+        }
+
         User user = userRepository.findById(refreshToken.getUserId())
-                .orElseThrow(() ->
-                        new UsernameNotFoundException("Invalid user")
-                );
+                .orElseThrow(() -> new UsernameNotFoundException("Invalid user"));
 
         return AuthResponse.builder()
                 .accessToken(jwtService.generateAccessToken(user))
                 .build();
     }
 
-    private RefreshToken checkIfExists() {
-        return refreshTokenRepository
-                .findByRevokedFalse()
-                .orElseThrow(() ->
-                        new InvalidException("Please login again")
-                );
-    }
 
     @Override
     public void logout(String rawRefreshToken) {
+
+        String[] parts = parse(rawRefreshToken);
+        String tokenId = parts[0];
+        String secret = parts[1];
+
         RefreshToken refreshToken = refreshTokenRepository
-                .findByRevokedFalse()
+                .findByIdAndRevokedFalse(tokenId)
                 .orElse(null);
 
         if (refreshToken == null) {
             return;
         }
 
-        if (passwordEncoder.matches(rawRefreshToken, refreshToken.getTokenHash())) {
+        if (passwordEncoder.matches(secret, refreshToken.getTokenHash())) {
             revoke(refreshToken);
         }
     }
@@ -104,5 +104,18 @@ public class RefreshTokenServiceImpl implements RefreshTokenService{
     private void revoke(RefreshToken refreshToken) {
         refreshToken.setRevoked(true);
         refreshTokenRepository.save(refreshToken);
+    }
+
+    private String[] parse(String rawRefreshToken) {
+        if (rawRefreshToken == null || !rawRefreshToken.contains(".")) {
+            throw new InvalidException("Please login again");
+        }
+
+        String[] parts = rawRefreshToken.split("\\.");
+        if (parts.length != 2) {
+            throw new InvalidException("Please login again");
+        }
+
+        return parts;
     }
 }
