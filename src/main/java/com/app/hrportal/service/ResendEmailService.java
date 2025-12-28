@@ -18,23 +18,12 @@ public class ResendEmailService implements EmailService{
     private final Resend resendClient;
 
     @Override
-    public void send(SignupEvent signupEvent) {
-
-        String email = signupEvent.getEmail();
-
-        CreateEmailOptions params = CreateEmailOptions.builder()
-                .to(signupEvent.getEmail())
-                .template(Template.builder()
-                        .id("signup-verification")
-                        .addVariable("otp",signupEvent.getOtp())
-                        .build())
-                .build();
+    public void send(CreateEmailOptions params) {
 
         try {
             CreateEmailResponse data = resendClient.emails().send(params);
-            System.out.println(data.getId());
 
-            log.info("Email sent to : {}",email);
+            log.info("Email sent to : {}",params.getTo());
         } catch (ResendException e) {
             e.printStackTrace();
         }
