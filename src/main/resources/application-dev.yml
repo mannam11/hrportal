@@ -34,3 +34,6 @@ logging:
   level:
     root: INFO
     org.springframework.security: WARN
+
+resend:
+  api-key: ${RESEND_API_KEY}
