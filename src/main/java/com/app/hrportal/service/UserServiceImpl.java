@@ -2,13 +2,17 @@ package com.app.hrportal.service;
 
 import com.app.hrportal.dto.reponse.AuthResponse;
 import com.app.hrportal.dto.request.LoginRequest;
+import com.app.hrportal.dto.request.SignupEvent;
 import com.app.hrportal.dto.request.SignupRequest;
 import com.app.hrportal.enums.Role;
+import com.app.hrportal.exception.user.EmailAlreadyExistsException;
 import com.app.hrportal.model.User;
 import com.app.hrportal.repository.UserRepository;
+import com.app.hrportal.utils.OtpGenerator;
 import com.fasterxml.uuid.Generators;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.math3.random.RandomGenerator;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -17,7 +21,9 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.security.SecureRandom;
 import java.time.LocalDateTime;
+import java.util.Random;
 
 @Service
 @RequiredArgsConstructor
@@ -28,9 +34,14 @@ public class UserServiceImpl implements UserService{
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
     private final JwtService jwtService;
+    private final EmailService emailService;
 
     @Override
     public void signup(SignupRequest request) {
+
+        if(userRepository.existsByEmail(request.getEmail())){
+            throw new EmailAlreadyExistsException("Email already exists");
+        }
 
         LocalDateTime now  = LocalDateTime.now();
 
@@ -45,9 +56,14 @@ public class UserServiceImpl implements UserService{
                 .updatedAt(now)
                 .build();
 
-        userRepository.save(user);
+        User savedUser = userRepository.save(user);
 
-        log.info("User with email : {} signed up successfully", user.getEmail());
+        log.info("User with email : {} signed up successfully", savedUser.getEmail());
+
+        emailService.send(SignupEvent.builder()
+                        .email(savedUser.getEmail())
+                        .otp(OtpGenerator.generate())
+                .build());
     }
 
     @Override
