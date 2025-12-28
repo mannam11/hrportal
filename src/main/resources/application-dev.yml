@@ -13,14 +13,11 @@ spring:
           n: 1
           temperature: 0
   rabbitmq:
-    addresses: ${CLOUDAMQP_URL}
+    addresses: ${RABBITMQ_INSTANCE_URL}
     listener:
       simple:
         acknowledge-mode: auto
-
-resume:
-  analysis:
-    queue : ${RESUME_ANALYSIS_QUEUE}
+        default-requeue-rejected: false
 
 jwt:
   secret: ${JWT_SECRET}

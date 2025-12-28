@@ -2,7 +2,7 @@ package com.app.hrportal.service;
 
 import com.app.hrportal.dto.reponse.AnalysisResponse;
 import com.app.hrportal.dto.reponse.ScoreResult;
-import com.app.hrportal.dto.request.AnalysisRequest;
+import com.app.hrportal.dto.request.ApplicationSubmittedEvent;
 import com.app.hrportal.enums.AnalysisStatus;
 import com.app.hrportal.enums.ApplicationStatus;
 import com.app.hrportal.exception.application.ApplicationNotFoundException;
@@ -23,7 +23,7 @@ import java.time.LocalDateTime;
 @Service
 @Slf4j
 @RequiredArgsConstructor
-public class ResumeAnalysisConsumerService implements ConsumerService {
+public class ApplicationAnalysisService {
 
     private final ResumeAnalysisService resumeAnalysisService;
     private final ApplicationService applicationService;
@@ -32,10 +32,9 @@ public class ResumeAnalysisConsumerService implements ConsumerService {
     private final JobPostRepository jobPostRepository;
     private final ApplicationRepository applicationRepository;
 
-    @Override
-    public void consume(AnalysisRequest request) throws IOException {
+    public void analyse(ApplicationSubmittedEvent event) throws IOException {
 
-        String applicationId = request.getApplicationId();
+        String applicationId = event.getApplicationId();
         log.info("Processing application {}", applicationId);
 
         Application application = applicationRepository.findById(applicationId)

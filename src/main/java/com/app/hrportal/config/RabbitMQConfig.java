@@ -1,27 +1,30 @@
 package com.app.hrportal.config;
 
+import com.app.hrportal.utils.QueueNames;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.core.Queue;
 import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
 import org.springframework.amqp.support.converter.MessageConverter;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
 public class RabbitMQConfig {
 
-    @Value("${resume.analysis.queue}")
-    private String resumeAnalysisQueue;
-
     @Bean
-    public Queue resumeAnalysisQueue(){
-        return new Queue(resumeAnalysisQueue,true);
+    public Queue applicationsEventsQueue(){
+        return new Queue(QueueNames.APPLICATION_EVENTS,true);
     }
 
     @Bean
-    public MessageConverter jsonMessageConverter() {
-        return new Jackson2JsonMessageConverter();
+    public Queue emailEventsQueue(){
+        return new Queue(QueueNames.EMAIL_EVENTS,true);
+    }
+
+    @Bean
+    public MessageConverter jsonMessageConverter(ObjectMapper objectMapper) {
+        return new Jackson2JsonMessageConverter(objectMapper);
     }
 
 }

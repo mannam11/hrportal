@@ -20,6 +20,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
@@ -34,9 +35,10 @@ public class UserServiceImpl implements UserService{
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
     private final JwtService jwtService;
-    private final EmailService emailService;
+    private final EventPublisher eventPublisher;
 
     @Override
+    @Transactional
     public void signup(SignupRequest request) {
 
         if(userRepository.existsByEmail(request.getEmail())){
@@ -60,10 +62,12 @@ public class UserServiceImpl implements UserService{
 
         log.info("User with email : {} signed up successfully", savedUser.getEmail());
 
-        emailService.send(SignupEvent.builder()
-                        .email(savedUser.getEmail())
-                        .otp(OtpGenerator.generate())
-                .build());
+        eventPublisher.publish(
+                new SignupEvent(
+                        savedUser.getEmail(),
+                        OtpGenerator.generate()
+                )
+        );
     }
 
     @Override

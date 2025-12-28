@@ -1,8 +1,8 @@
 package com.app.hrportal.service;
 
 import com.app.hrportal.dto.reponse.ApplicationResponse;
-import com.app.hrportal.dto.request.AnalysisRequest;
 import com.app.hrportal.dto.request.ApplicationRequest;
+import com.app.hrportal.dto.request.ApplicationSubmittedEvent;
 import com.app.hrportal.enums.AnalysisStatus;
 import com.app.hrportal.enums.ApplicationStatus;
 import com.app.hrportal.enums.JobPostStatus;
@@ -22,6 +22,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
@@ -42,7 +43,7 @@ public class ApplicationServiceImpl implements ApplicationService{
     private final ApplicationRepository applicationRepository;
     private final JobPostRepository jobPostRepository;
     private final StorageService storageService;
-    private final QueueService queueService;
+    private final RabbitMqEventPublisher eventPublisher;
 
     @Override
     public Application save(Application application) {
@@ -50,6 +51,7 @@ public class ApplicationServiceImpl implements ApplicationService{
     }
 
     @Override
+    @Transactional
     public void createApplication(String jobId,
                                                  ApplicationRequest request,
                                                  MultipartFile file) {
@@ -74,9 +76,10 @@ public class ApplicationServiceImpl implements ApplicationService{
         Application savedApplication = save(application);
         log.info("Application saved with id : {}",savedApplication.getId());
 
-        queueService.send(AnalysisRequest.builder()
-                .applicationId(savedApplication.getId())
-                .build());
+        eventPublisher.publish(new ApplicationSubmittedEvent(
+                savedApplication.getId(),
+                savedApplication.getEmail()
+        ));
     }
 
     private JobPost findOpenJobForApplication(String jobId) {
