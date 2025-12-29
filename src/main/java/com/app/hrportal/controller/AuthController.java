@@ -2,11 +2,15 @@ package com.app.hrportal.controller;
 
 import com.app.hrportal.dto.reponse.AuthResponse;
 import com.app.hrportal.dto.request.LoginRequest;
+import com.app.hrportal.dto.request.OtpRequest;
 import com.app.hrportal.dto.request.SignupRequest;
+import com.app.hrportal.dto.request.VerifyOtpRequest;
 import com.app.hrportal.exception.InvalidException;
+import com.app.hrportal.service.OtpService;
 import com.app.hrportal.service.RefreshTokenService;
 import com.app.hrportal.service.UserService;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -23,6 +27,7 @@ public class AuthController {
 
     private final UserService userService;
     private final RefreshTokenService refreshTokenService;
+    private final OtpService otpService;
 
     @PostMapping("/signup")
     public ResponseEntity<String> signup(@RequestBody SignupRequest request){
@@ -107,6 +112,21 @@ public class AuthController {
         }
 
         clearRefreshTokenCookie(response);
+
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/verify-email")
+    public ResponseEntity<Void> verifyEmail(@RequestBody VerifyOtpRequest request) {
+        otpService.verifySignupOtp(request);
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/request-otp")
+    public ResponseEntity<Void> requestOtp(
+            @Valid @RequestBody OtpRequest request) {
+
+        otpService.requestOtp(request);
 
         return ResponseEntity.ok().build();
     }

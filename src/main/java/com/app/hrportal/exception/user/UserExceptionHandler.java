@@ -18,4 +18,14 @@ public class UserExceptionHandler {
         return ResponseEntity.badRequest().body(response);
     }
 
+    @ExceptionHandler(EmailNotVerifiedException.class)
+    public ResponseEntity<ErrorResponse> handleEmailNotVerifiedException(EmailNotVerifiedException ex){
+        ErrorResponse response = ErrorResponse.builder()
+                .message(ex.getMessage())
+                .error("EMAIL_NOT_VERIFIED")
+                .build();
+
+        return ResponseEntity.badRequest().body(response);
+    }
+
 }

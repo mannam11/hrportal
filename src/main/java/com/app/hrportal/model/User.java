@@ -1,6 +1,7 @@
 package com.app.hrportal.model;
 
 
+import com.app.hrportal.enums.OtpPurpose;
 import com.app.hrportal.enums.Role;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -30,9 +31,23 @@ public class User implements UserDetails {
     private String password;
     private String orgName;
     private Role role;
+    private boolean emailVerified;
+    private Otp otp;
 
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Builder
+    public static class Otp{
+        private Integer code;
+        private OtpPurpose purpose;
+        private boolean used;
+        private LocalDateTime createdAt;
+        private LocalDateTime expiresAt;
+    }
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
