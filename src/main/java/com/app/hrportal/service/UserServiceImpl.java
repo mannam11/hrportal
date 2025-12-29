@@ -4,8 +4,10 @@ import com.app.hrportal.dto.reponse.AuthResponse;
 import com.app.hrportal.dto.request.LoginRequest;
 import com.app.hrportal.dto.request.SignupEvent;
 import com.app.hrportal.dto.request.SignupRequest;
+import com.app.hrportal.enums.OtpPurpose;
 import com.app.hrportal.enums.Role;
 import com.app.hrportal.exception.user.EmailAlreadyExistsException;
+import com.app.hrportal.exception.user.EmailNotVerifiedException;
 import com.app.hrportal.model.User;
 import com.app.hrportal.repository.UserRepository;
 import com.app.hrportal.utils.OtpGenerator;
@@ -45,7 +47,8 @@ public class UserServiceImpl implements UserService{
             throw new EmailAlreadyExistsException("Email already exists");
         }
 
-        LocalDateTime now  = LocalDateTime.now();
+        LocalDateTime now = LocalDateTime.now();
+        Integer otpCode = OtpGenerator.generate();
 
         User user = User.builder()
                 .id(Generators.timeBasedEpochGenerator().generate().toString())
@@ -54,6 +57,16 @@ public class UserServiceImpl implements UserService{
                 .email(request.getEmail())
                 .password(passwordEncoder.encode(request.getPassword()))
                 .role(Role.RECRUITER)
+                .emailVerified(false)
+                .otp(
+                        User.Otp.builder()
+                                .code(otpCode)
+                                .purpose(OtpPurpose.SIGNUP)
+                                .createdAt(now)
+                                .expiresAt(now.plusMinutes(10))
+                                .used(false)
+                                .build()
+                )
                 .createdAt(now)
                 .updatedAt(now)
                 .build();
@@ -62,16 +75,21 @@ public class UserServiceImpl implements UserService{
 
         log.info("User with email : {} signed up successfully", savedUser.getEmail());
 
+        // Send OTP email
         eventPublisher.publish(
                 new SignupEvent(
                         savedUser.getEmail(),
-                        OtpGenerator.generate()
+                        otpCode
                 )
         );
     }
 
     @Override
     public AuthResponse login(LoginRequest request) {
+
+        if (!userRepository.existsByEmailAndEmailVerifiedTrue(request.getEmail())) {
+            throw new EmailNotVerifiedException("Please verify your email before logging in");
+        }
 
         Authentication authentication =
                 authenticationManager.authenticate(
