@@ -18,7 +18,9 @@ public class CorsConfig {
         config.setAllowedOriginPatterns(List.of(
                 "http://localhost:3000",
                 "http://172.24.240.1:3000",
-                "https://*.onrender.com"
+                "https://*.onrender.com",
+                "https://recry.in",
+                "https://www.recry.in"
         ));
         config.setAllowedMethods(List.of(
                 "GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"
